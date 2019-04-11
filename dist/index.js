@@ -1,4 +1,4 @@
-var Disposable = (function () {
+var Cancellable = (function () {
   'use strict';
 
   /* eslint-disable no-restricted-syntax */
