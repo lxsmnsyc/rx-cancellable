@@ -1,7 +1,7 @@
 {
-  "name": "rx-disposable",
+  "name": "rx-cancellable",
   "version": "0.1.0",
-  "description": "Reactive Extensions - represents the state of disposition",
+  "description": "Reactive Extensions - represents the state of cancellation",
   "main": "index.js",
   "directories": {
     "test": "test"
@@ -31,20 +31,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LXSMNSYC/rx-disposable.git"
+    "url": "git+https://github.com/LXSMNSYC/rx-cancellable.git"
   },
   "keywords": [
     "rx",
     "rxjs",
     "reactive-extensions",
-    "disposable"
+    "cancellable"
   ],
   "author": "LXSMNSYC (alexis.munsayac@gmail.com)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/LXSMNSYC/rx-disposable/issues"
+    "url": "https://github.com/LXSMNSYC/rx-cancellable/issues"
   },
-  "homepage": "https://github.com/LXSMNSYC/rx-disposable#readme",
+  "homepage": "https://github.com/LXSMNSYC/rx-cancellable#readme",
   "devDependencies": {
     "@babel/core": "^7.4.3",
     "@babel/preset-env": "^7.4.3",
