@@ -43,14 +43,14 @@ CDN
 #### CommonJS
 
 ```js
-const Disposable = require('rx-cancellable');
+const Cancellable = require('rx-cancellable');
 ```
 
-Loading the CommonJS module provides the Disposable class.
+Loading the CommonJS module provides the Cancellable class.
 
 #### Browser
 
-Loading the JavaScript file for the rx-cancellable provides the Disposable class
+Loading the JavaScript file for the rx-cancellable provides the Cancellable class
 
 ## Documentation
 
