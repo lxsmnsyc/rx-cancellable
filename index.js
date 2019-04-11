@@ -3,12 +3,12 @@
 /* eslint-disable no-restricted-syntax */
 const dispatch = (s, e) => s.events[e].forEach(f => f.apply(s));
 
-const DISPOSED = {
-  disposed: true,
+const CANCELLED = {
+  cancelled: true,
 };
 
-const NOT_DISPOSED = {
-  disposed: false,
+const NOT_CANCELLED = {
+  cancelled: false,
 };
 
 const ACTIVE = {
@@ -26,14 +26,14 @@ const PARENT = new WeakMap();
 let BASIC_PARENT;
 
 /**
- * Represents a state of disposition and activation.
+ * Represents a state of cancellation and activation.
  */
-class Disposable {
+class Cancellable {
   /**
    * @ignore
    */
   constructor() {
-    DISPOSE_STATE.set(this, NOT_DISPOSED);
+    DISPOSE_STATE.set(this, NOT_CANCELLED);
     ACTIVE_STATE.set(this, ACTIVE);
     /**
      * @ignore
@@ -41,7 +41,7 @@ class Disposable {
     this.events = {
       enable: [],
       disable: [],
-      dispose: [],
+      cancel: [],
     };
     /**
      * @ignore
@@ -50,48 +50,50 @@ class Disposable {
   }
 
   /**
-   * Creates a Disposable instance.
+   * Creates a Cancellable instance.
    *
-   * @returns {Disposable};
+   * @return {Cancellable}
    */
   static create() {
     if (BASIC_PARENT == null) {
-      BASIC_PARENT = new Disposable();
+      BASIC_PARENT = new Cancellable();
     }
 
-    const disposable = new Disposable();
+    const cancellable = new Cancellable();
 
-    DISPOSE_STATE.set(disposable, BASIC_PARENT);
-    ACTIVE_STATE.set(disposable, BASIC_PARENT);
-    PARENT.set(disposable, BASIC_PARENT);
+    DISPOSE_STATE.set(cancellable, BASIC_PARENT);
+    ACTIVE_STATE.set(cancellable, BASIC_PARENT);
+    PARENT.set(cancellable, BASIC_PARENT);
 
-    return disposable;
+    return cancellable;
   }
 
 
   /**
-   * Returns true if the Disposable is disposed.
+   * Returns true if the Cancellable is cancelled.
+   * @return {boolean}
    */
-  get disposed() {
-    return DISPOSE_STATE.get(this).disposed;
+  get cancelled() {
+    return DISPOSE_STATE.get(this).cancelled;
   }
 
   /**
-   * Returns true if the Disposable is active.
+   * Returns true if the Cancellable is active.
+   * @return {boolean}
    */
   get active() {
     return ACTIVE_STATE.get(this).active;
   }
 
   /**
-   * Enables a Disposable.
+   * Enables a Cancellable.
    *
-   * Fails to enable if the Disposable instance is
-   * already disposed.
+   * Fails to enable if the Cancellable instance is
+   * already cancelled.
    * @returns {boolean}
    */
   enable() {
-    if (!(this.disposed || this.active)) {
+    if (!(this.cancelled || this.active)) {
       ACTIVE_STATE.set(this, PARENT.get(this));
 
       dispatch(this, 'enable');
@@ -102,14 +104,14 @@ class Disposable {
 
 
   /**
-   * Disables a Disposable.
+   * Disables a Cancellable.
    *
-   * Fails to disable if the Disposable instance is
-   * already disposed.
+   * Fails to disable if the Cancellable instance is
+   * already cancelled.
    * @returns {boolean}
    */
   disable() {
-    if (!this.disposed && this.active) {
+    if (!this.cancelled && this.active) {
       ACTIVE_STATE.set(this, INACTIVE);
 
       dispatch(this, 'disable');
@@ -119,32 +121,33 @@ class Disposable {
   }
 
   /**
-   * Checks if this Disposable is a parent of the given Disposable (hierarchy).
-   * @param {Disposable} disposable
-   * The child Disposable
+   * Checks if this Cancellable is a parent of the given Cancellable (hierarchy).
+   * @param {Cancellable} cancellable
+   * The child Cancellable
    * @returns {boolean}
    */
-  isParentTo(disposable) {
-    const parent = PARENT.get(disposable);
+  isParentTo(cancellable) {
+    const parent = PARENT.get(cancellable);
     return parent != null
       && (parent === this || (parent !== BASIC_PARENT && this.isParentTo(parent)));
   }
 
   /**
-   * Sets the given Disposable as a parent Disposable.
+   * Sets the given Cancellable as a parent Cancellable.
    *
-   * if the given Disposable is already disposed, this
-   * Disposable is disposed as well.
-   * @param {Disposable} disposable
+   * if the given Cancellable is already cancelled, this
+   * Cancellable is cancelled as well.
+   * @param {Cancellable} cancellable
    * @returns {boolean}
    */
-  setParent(disposable) {
-    if (disposable !== this && !this.isParentTo(disposable) && disposable instanceof Disposable) {
-      if (disposable.disposed) {
-        this.dispose();
+  setParent(cancellable) {
+    if (cancellable !== this
+      && !this.isParentTo(cancellable) && cancellable instanceof Cancellable) {
+      if (cancellable.cancelled) {
+        this.cancel();
       } else {
-        PARENT.set(this, disposable);
-        disposable.children.push(this);
+        PARENT.set(this, cancellable);
+        cancellable.children.push(this);
         return true;
       }
     }
@@ -152,44 +155,44 @@ class Disposable {
   }
 
   /**
-   * Removes the parent Disposable
-   * @param {!Disposable} disposable
-   * The parent Disposable
+   * Removes the parent Cancellable
+   * @param {!Cancellable} cancellable
+   * The parent Cancellable
    * @returns {boolean}
    */
-  removeParent(disposable) {
-    return disposable.remove(this);
+  removeParent(cancellable) {
+    return cancellable.remove(this);
   }
 
   /**
-   * Adds a Disposable as a child Disposable.
+   * Adds a Cancellable as a child Cancellable.
    *
-   * Child Disposables are disposed, enabled and disabled if their
-   * parent Disposable is disposed as well.
+   * Child Disposables are cancelled, enabled and disabled if their
+   * parent Cancellable is cancelled as well.
    *
-   * A child Disposable cannot have more than one parent Disposable.
+   * A child Cancellable cannot have more than one parent Cancellable.
    *
-   * If a child Disposable is added to a parent Disposable that is
-   * already disposed, the child Disposable is disposed.
+   * If a child Cancellable is added to a parent Cancellable that is
+   * already cancelled, the child Cancellable is cancelled.
    *
-   * @param {!Disposable} disposable
+   * @param {!Cancellable} cancellable
    * @returns {boolean}
    */
-  add(disposable) {
-    return disposable.setParent(this);
+  add(cancellable) {
+    return cancellable.setParent(this);
   }
 
   /**
-   * Removes a direct child Disposable.
+   * Removes a direct child Cancellable.
    *
-   * @param {!Disposable} disposable
-   * The child Disposable to be removed.
+   * @param {!Cancellable} cancellable
+   * The child Cancellable to be removed.
    * @returns {boolean}
    */
-  remove(disposable) {
-    if (!this.disposed && PARENT.get(disposable) === this) {
-      this.children = this.children.filter(x => x !== disposable);
-      PARENT.set(disposable, BASIC_PARENT);
+  remove(cancellable) {
+    if (!this.cancelled && PARENT.get(cancellable) === this) {
+      this.children = this.children.filter(x => x !== cancellable);
+      PARENT.set(cancellable, BASIC_PARENT);
       return true;
     }
     return false;
@@ -198,15 +201,15 @@ class Disposable {
   /**
    * Disposes the instance.
    *
-   * If the Disposable instance has more than one children, the
-   * child Disposables are disposed as well.
+   * If the Cancellable instance has more than one children, the
+   * child Disposables are cancelled as well.
    * @returns {boolean}
    */
-  dispose() {
-    if (!this.disposed) {
-      dispatch(this, 'dispose');
-      this.children.forEach(x => x.dispose());
-      DISPOSE_STATE.set(this, DISPOSED);
+  cancel() {
+    if (!this.cancelled) {
+      dispatch(this, 'cancel');
+      this.children.forEach(x => x.cancel());
+      DISPOSE_STATE.set(this, CANCELLED);
       return true;
     }
     return false;
@@ -216,9 +219,9 @@ class Disposable {
    * Registers a listener function to a target event dispatcher.
    * @param {!string} ev
    * Defines the event target
-   * - enable: fires whenever the Disposable is enabled.
-   * - disable: fires whenever the Disposable is disabled.
-   * - dispose: fires when the Disposable is disposed.
+   * - enable: fires whenever the Cancellable is enabled.
+   * - disable: fires whenever the Cancellable is disabled.
+   * - cancel: fires when the Cancellable is cancelled.
    * @param {!function} fn
    * a function to be called when the event is dispatched.
    */
@@ -227,7 +230,7 @@ class Disposable {
       return;
     }
     const { events } = this;
-    if (this.disposed) {
+    if (this.cancelled) {
       return;
     }
     if (ev in events) {
@@ -240,9 +243,9 @@ class Disposable {
    * Removes a listener function from a target event dispatcher.
    * @param {!string} ev
    * Defines the event target
-   * - enable: fires whenever the Disposable is enabled.
-   * - disable: fires whenever the Disposable is disabled.
-   * - dispose: fires when the Disposable is disposed.
+   * - enable: fires whenever the Cancellable is enabled.
+   * - disable: fires whenever the Cancellable is disabled.
+   * - cancel: fires when the Cancellable is cancelled.
    * @param {!function} fn
    * a function from be removed from the target event dispatcher.
    */
@@ -251,7 +254,7 @@ class Disposable {
       return;
     }
     const { events } = this;
-    if (this.disposed) {
+    if (this.cancelled) {
       return;
     }
     if (ev in events) {
@@ -263,4 +266,4 @@ class Disposable {
   }
 }
 
-module.exports = Disposable;
+module.exports = Cancellable;
