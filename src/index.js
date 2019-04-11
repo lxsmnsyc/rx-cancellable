@@ -24,7 +24,7 @@ const PARENT = new WeakMap();
 let BASIC_PARENT;
 
 /**
- * A Disposable represents a state of disposition and activation.
+ * Represents a state of disposition and activation.
  */
 export default class Disposable {
   /**
@@ -33,14 +33,25 @@ export default class Disposable {
   constructor() {
     DISPOSE_STATE.set(this, NOT_DISPOSED);
     ACTIVE_STATE.set(this, ACTIVE);
-
+    /**
+     * @ignore
+     */
     this.events = {
       enable: [],
       disable: [],
       dispose: [],
     };
+    /**
+     * @ignore
+     */
+    this.children = [];
   }
 
+  /**
+   * Creates a Disposable instance.
+   *
+   * @returns {Disposable};
+   */
   static create() {
     if (BASIC_PARENT == null) {
       BASIC_PARENT = new Disposable();
@@ -51,6 +62,8 @@ export default class Disposable {
     DISPOSE_STATE.set(disposable, BASIC_PARENT);
     ACTIVE_STATE.set(disposable, BASIC_PARENT);
     PARENT.set(disposable, BASIC_PARENT);
+
+    return disposable;
   }
 
 
@@ -73,13 +86,16 @@ export default class Disposable {
    *
    * Fails to enable if the Disposable instance is
    * already disposed.
+   * @returns {boolean}
    */
   enable() {
     if (!(this.disposed || this.active)) {
       ACTIVE_STATE.set(this, PARENT.get(this));
 
-      dispatch(this, 'enabled');
+      dispatch(this, 'enable');
+      return true;
     }
+    return false;
   }
 
 
@@ -88,13 +104,28 @@ export default class Disposable {
    *
    * Fails to disable if the Disposable instance is
    * already disposed.
+   * @returns {boolean}
    */
   disable() {
     if (!this.disposed && this.active) {
       ACTIVE_STATE.set(this, INACTIVE);
 
-      dispatch(this, 'enabled');
+      dispatch(this, 'disable');
+      return true;
     }
+    return false;
+  }
+
+  /**
+   * Checks if this Disposable is a parent of the given Disposable (hierarchy).
+   * @param {Disposable} disposable
+   * The child Disposable
+   * @returns {boolean}
+   */
+  isParentTo(disposable) {
+    const parent = PARENT.get(disposable);
+    return parent != null
+      && (parent === this || (parent !== BASIC_PARENT && this.isParentTo(parent)));
   }
 
   /**
@@ -103,15 +134,29 @@ export default class Disposable {
    * if the given Disposable is already disposed, this
    * Disposable is disposed as well.
    * @param {Disposable} disposable
+   * @returns {boolean}
    */
   setParent(disposable) {
-    if (disposable.parent !== this && disposable instanceof Disposable) {
+    if (disposable !== this && !this.isParentTo(disposable) && disposable instanceof Disposable) {
       if (disposable.disposed) {
         this.dispose();
       } else {
         PARENT.set(this, disposable);
+        disposable.children.push(this);
+        return true;
       }
     }
+    return false;
+  }
+
+  /**
+   * Removes the parent Disposable
+   * @param {!Disposable} disposable
+   * The parent Disposable
+   * @returns {boolean}
+   */
+  removeParent(disposable) {
+    return disposable.remove(this);
   }
 
   /**
@@ -126,9 +171,26 @@ export default class Disposable {
    * already disposed, the child Disposable is disposed.
    *
    * @param {!Disposable} disposable
+   * @returns {boolean}
    */
   add(disposable) {
-    disposable.setParent(this);
+    return disposable.setParent(this);
+  }
+
+  /**
+   * Removes a direct child Disposable.
+   *
+   * @param {!Disposable} disposable
+   * The child Disposable to be removed.
+   * @returns {boolean}
+   */
+  remove(disposable) {
+    if (!this.disposed && PARENT.get(disposable) === this) {
+      this.children = this.children.filter(x => x !== disposable);
+      PARENT.set(disposable, BASIC_PARENT);
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -136,12 +198,16 @@ export default class Disposable {
    *
    * If the Disposable instance has more than one children, the
    * child Disposables are disposed as well.
+   * @returns {boolean}
    */
   dispose() {
     if (!this.disposed) {
+      dispatch(this, 'dispose');
       this.children.forEach(x => x.dispose());
       DISPOSE_STATE.set(this, DISPOSED);
+      return true;
     }
+    return false;
   }
 
   /**
