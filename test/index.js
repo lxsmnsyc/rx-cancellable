@@ -1,174 +1,174 @@
 /* eslint-disable no-undef */
 import assert from 'assert';
-import Disposable from '../src';
+import Cancellable from '../src';
 
 
-describe('Disposable', () => {
+describe('Cancellable', () => {
   describe('#create', () => {
-    it('should create a Disposable', () => {
-      assert(Disposable.create() instanceof Disposable);
+    it('should create a Cancellable', () => {
+      assert(Cancellable.create() instanceof Cancellable);
     });
   });
   describe('#active', () => {
-    it('should return true if Disposable is enabled.', () => {
-      const d = Disposable.create();
+    it('should return true if Cancellable is enabled.', () => {
+      const d = Cancellable.create();
       assert(d.active === true);
     });
-    it('should return false if Disposable is disabled.', () => {
-      const d = Disposable.create();
+    it('should return false if Cancellable is disabled.', () => {
+      const d = Cancellable.create();
       d.disable();
       assert(d.active === false);
     });
-    it('should return true if Disposable is disabled then enabled.', () => {
-      const d = Disposable.create();
+    it('should return true if Cancellable is disabled then enabled.', () => {
+      const d = Cancellable.create();
       d.disable();
       d.enable();
       assert(d.active === true);
     });
-    it('should return true if Disposable is enabled, disposed, and disabled.', () => {
-      const d = Disposable.create();
-      d.dispose();
+    it('should return true if Cancellable is enabled, cancelled, and disabled.', () => {
+      const d = Cancellable.create();
+      d.cancel();
       d.disable();
       assert(d.active === true);
     });
-    it('should return true if Disposable is disabled, disposed, and enabled.', () => {
-      const d = Disposable.create();
+    it('should return true if Cancellable is disabled, cancelled, and enabled.', () => {
+      const d = Cancellable.create();
       d.disable();
-      d.dispose();
+      d.cancel();
       d.enable();
       assert(d.active === false);
     });
   });
-  describe('#disposed', () => {
-    it('should return true if Disposable is disposed.', () => {
-      const d = Disposable.create();
-      d.dispose();
-      assert(d.disposed === true);
+  describe('#cancelled', () => {
+    it('should return true if Cancellable is cancelled.', () => {
+      const d = Cancellable.create();
+      d.cancel();
+      assert(d.cancelled === true);
     });
-    it('should return true if Disposable is not disposed.', () => {
-      const d = Disposable.create();
-      assert(d.disposed === false);
+    it('should return true if Cancellable is not cancelled.', () => {
+      const d = Cancellable.create();
+      assert(d.cancelled === false);
     });
   });
-  describe('#dispose', () => {
-    it('should return true if Disposable is disposed for the first time.', () => {
-      assert(Disposable.create().dispose());
+  describe('#cancel', () => {
+    it('should return true if Cancellable is cancelled for the first time.', () => {
+      assert(Cancellable.create().cancel());
     });
-    it('should return false if Disposable has been disposed before.', () => {
-      const d = Disposable.create();
-      d.dispose();
-      assert(d.dispose() === false);
+    it('should return false if Cancellable has been cancelled before.', () => {
+      const d = Cancellable.create();
+      d.cancel();
+      assert(d.cancel() === false);
     });
   });
   describe('#enable', () => {
-    it('should return true if Disposable is enabled after being disabled.', () => {
-      const d = Disposable.create();
+    it('should return true if Cancellable is enabled after being disabled.', () => {
+      const d = Cancellable.create();
       d.disable();
       assert(d.enable());
     });
-    it('should return false if Disposable is enabled already.', () => {
-      const d = Disposable.create();
+    it('should return false if Cancellable is enabled already.', () => {
+      const d = Cancellable.create();
       assert(d.enable() === false);
     });
   });
   describe('#disable', () => {
-    it('should return true if Disposable is disabled after being enabled.', () => {
-      const d = Disposable.create();
+    it('should return true if Cancellable is disabled after being enabled.', () => {
+      const d = Cancellable.create();
       assert(d.disable());
     });
-    it('should return false if Disposable is disabled already.', () => {
-      const d = Disposable.create();
+    it('should return false if Cancellable is disabled already.', () => {
+      const d = Cancellable.create();
       d.disable();
       assert(d.disable() === false);
     });
   });
   describe('#setParent', () => {
-    it('should return false if the Disposable parent given is the same as the child', () => {
-      const d = Disposable.create();
+    it('should return false if the Cancellable parent given is the same as the child', () => {
+      const d = Cancellable.create();
       assert(d.setParent(d) === false);
     });
-    it('should return false if the Disposable parent given is not a Disposable', () => {
-      assert(Disposable.create().setParent() === false);
+    it('should return false if the Cancellable parent given is not a Cancellable', () => {
+      assert(Cancellable.create().setParent() === false);
     });
-    it('should return false if the Disposable parent given is a child of the source Disposable', () => {
-      const a = Disposable.create();
-      const b = Disposable.create();
+    it('should return false if the Cancellable parent given is a child of the source Cancellable', () => {
+      const a = Cancellable.create();
+      const b = Cancellable.create();
       a.setParent(b);
       assert(b.setParent(a) === false);
     });
-    it('should return false if the Disposable parent is already disposed.', () => {
-      const a = Disposable.create();
-      const b = Disposable.create();
-      a.dispose();
+    it('should return false if the Cancellable parent is already cancelled.', () => {
+      const a = Cancellable.create();
+      const b = Cancellable.create();
+      a.cancel();
       assert(b.setParent(a) === false);
-      assert(a.disposed);
+      assert(a.cancelled);
     });
-    it('should the children be disposed if the parent is disposed', () => {
-      const a = Disposable.create();
-      const b = Disposable.create();
+    it('should the children be cancelled if the parent is cancelled', () => {
+      const a = Cancellable.create();
+      const b = Cancellable.create();
       b.setParent(a);
-      a.dispose();
-      assert(b.disposed);
+      a.cancel();
+      assert(b.cancelled);
     });
     it('should the children be disabled if the parent is disabled', () => {
-      const a = Disposable.create();
-      const b = Disposable.create();
+      const a = Cancellable.create();
+      const b = Cancellable.create();
       b.setParent(a);
       a.disable();
       assert(b.active);
     });
   });
   describe('#remove', () => {
-    it('should return false if the Disposable given is not the child.', () => {
-      const a = Disposable.create();
-      const b = Disposable.create();
+    it('should return false if the Cancellable given is not the child.', () => {
+      const a = Cancellable.create();
+      const b = Cancellable.create();
       assert(a.remove(b) === false);
     });
-    it('should return false if the source is already disposed.', () => {
-      const a = Disposable.create();
-      const b = Disposable.create();
-      a.dispose();
+    it('should return false if the source is already cancelled.', () => {
+      const a = Cancellable.create();
+      const b = Cancellable.create();
+      a.cancel();
       assert(b.remove(a) === false);
     });
     it('should return true if the removal is successful', () => {
-      const a = Disposable.create();
-      const b = Disposable.create();
+      const a = Cancellable.create();
+      const b = Cancellable.create();
       a.add(b);
       assert(a.remove(b) === true);
-      a.dispose();
-      assert(b.disposed === false);
+      a.cancel();
+      assert(b.cancelled === false);
     });
   });
   describe('#addEventListener', () => {
-    it('should fire the enable listener if the Disposable is enabled', (done) => {
-      const a = Disposable.create();
+    it('should fire the enable listener if the Cancellable is enabled', (done) => {
+      const a = Cancellable.create();
       a.addEventListener('enable');
       a.addEventListener('enable', () => done());
       a.disable();
       a.enable();
     });
-    it('should fire the disable listener if the Disposable is disabled', (done) => {
-      const a = Disposable.create();
+    it('should fire the disable listener if the Cancellable is disabled', (done) => {
+      const a = Cancellable.create();
       a.addEventListener('', () => done());
       a.addEventListener('disable', () => done());
       a.disable();
     });
-    it('should fire the dispose listener if the Disposable is disposed', (done) => {
-      const a = Disposable.create();
+    it('should fire the cancel listener if the Cancellable is cancelled', (done) => {
+      const a = Cancellable.create();
       a.addEventListener('', () => done());
-      a.addEventListener('dispose', () => done());
-      a.dispose();
+      a.addEventListener('cancel', () => done());
+      a.cancel();
     });
-    it('should not fire the dispose listener if the Disposable is already disposed', (done) => {
-      const a = Disposable.create();
-      a.dispose();
-      a.addEventListener('dispose', () => done(false));
+    it('should not fire the cancel listener if the Cancellable is already cancelled', (done) => {
+      const a = Cancellable.create();
+      a.cancel();
+      a.addEventListener('cancel', () => done(false));
       done();
     });
   });
   describe('#removeEventListener', () => {
-    it('should not fire the enable listener if the Disposable is enabled', (done) => {
-      const a = Disposable.create();
+    it('should not fire the enable listener if the Cancellable is enabled', (done) => {
+      const a = Cancellable.create();
       const listener = () => done(false);
       a.removeEventListener('enable');
       a.addEventListener('enable', listener);
@@ -177,8 +177,8 @@ describe('Disposable', () => {
       a.enable();
       done();
     });
-    it('should not fire the disable listener if the Disposable is disabled', (done) => {
-      const a = Disposable.create();
+    it('should not fire the disable listener if the Cancellable is disabled', (done) => {
+      const a = Cancellable.create();
       const listener = () => done(false);
       a.removeEventListener('', () => done());
       a.addEventListener('disable', listener);
@@ -186,12 +186,12 @@ describe('Disposable', () => {
       a.disable();
       done();
     });
-    it('should not fire the dispose listener if the Disposable is disposed', (done) => {
-      const a = Disposable.create();
+    it('should not fire the cancel listener if the Cancellable is cancelled', (done) => {
+      const a = Cancellable.create();
       const listener = () => done(false);
-      a.addEventListener('dispose', listener);
-      a.removeEventListener('dispose', listener);
-      a.dispose();
+      a.addEventListener('cancel', listener);
+      a.removeEventListener('cancel', listener);
+      a.cancel();
       done();
     });
   });
