@@ -1,39 +1,39 @@
-# rx-disposable
+# rx-cancellable
 
-Reactive Extensions - represents a state of disposition
+Reactive Extensions - represents a state of cancellation
 
-[![NPM](https://nodei.co/npm/rx-disposable.png)](https://nodei.co/npm/rx-disposable/)
+[![NPM](https://nodei.co/npm/rx-cancellable.png)](https://nodei.co/npm/rx-cancellable/)
 
-[![](https://data.jsdelivr.com/v1/package/npm/rx-disposable/badge)](https://www.jsdelivr.com/package/npm/rx-disposable)
-[![HitCount](http://hits.dwyl.io/lxsmnsyc/rx-disposable.svg)](http://hits.dwyl.io/lxsmnsyc/rx-disposable)
+[![](https://data.jsdelivr.com/v1/package/npm/rx-cancellable/badge)](https://www.jsdelivr.com/package/npm/rx-cancellable)
+[![HitCount](http://hits.dwyl.io/lxsmnsyc/rx-cancellable.svg)](http://hits.dwyl.io/lxsmnsyc/rx-cancellable)
 
 | Platform | Build Status |
 | --- | --- |
-| Linux | [![Build Status](https://travis-ci.org/LXSMNSYC/rx-disposable.svg?branch=master)](https://travis-ci.org/LXSMNSYC/rx-disposable) |
-| Windows | [![Build status](https://ci.appveyor.com/api/projects/status/mkjwe462uk80axx4?svg=true)](https://ci.appveyor.com/project/LXSMNSYC/rx-disposable) |
+| Linux | [![Build Status](https://travis-ci.org/LXSMNSYC/rx-cancellable.svg?branch=master)](https://travis-ci.org/LXSMNSYC/rx-cancellable) |
+| Windows | [![Build status](https://ci.appveyor.com/api/projects/status/mkjwe462uk80axx4?svg=true)](https://ci.appveyor.com/project/LXSMNSYC/rx-cancellable) |
 
 
-[![codecov](https://codecov.io/gh/LXSMNSYC/rx-disposable/branch/master/graph/badge.svg)](https://codecov.io/gh/LXSMNSYC/rx-disposable)
-[![Known Vulnerabilities](https://snyk.io/test/github/LXSMNSYC/rx-disposable/badge.svg?targetFile=package.json)](https://snyk.io/test/github/LXSMNSYC/rx-disposable?targetFile=package.json)
+[![codecov](https://codecov.io/gh/LXSMNSYC/rx-cancellable/branch/master/graph/badge.svg)](https://codecov.io/gh/LXSMNSYC/rx-cancellable)
+[![Known Vulnerabilities](https://snyk.io/test/github/LXSMNSYC/rx-cancellable/badge.svg?targetFile=package.json)](https://snyk.io/test/github/LXSMNSYC/rx-cancellable?targetFile=package.json)
 
 ## Install
 
 NPM
 
 ```bash
-npm i rx-disposable
+npm i rx-cancellable
 ```
 
 CDN
 
 * jsDelivr
 ```html
-<script src="https://cdn.jsdelivr.net/npm/rx-disposable/dist/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/rx-cancellable/dist/index.min.js"></script>
 ```
 
 * unpkg
 ```html
-<script src="https://unpkg.com/rx-disposable/dist/index.min.js"></script>
+<script src="https://unpkg.com/rx-cancellable/dist/index.min.js"></script>
 ```
 
 ## Usage
@@ -43,18 +43,18 @@ CDN
 #### CommonJS
 
 ```js
-const Disposable = require('rx-disposable');
+const Disposable = require('rx-cancellable');
 ```
 
 Loading the CommonJS module provides the Disposable class.
 
 #### Browser
 
-Loading the JavaScript file for the rx-disposable provides the Disposable class
+Loading the JavaScript file for the rx-cancellable provides the Disposable class
 
 ## Documentation
 
-You can read the documentation at the [official doc site](https://lxsmnsyc.github.io/rx-disposable/)
+You can read the documentation at the [official doc site](https://lxsmnsyc.github.io/rx-cancellable/)
 
 ## Build
 
