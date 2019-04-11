@@ -1,9 +1,6 @@
 # rx-disposable
+
 Reactive Extensions - represents a state of disposition
-
-# rx-disposable
-
-Reactive Extensions - represents a deferred computation with an indication for a disposable value or exception.
 
 [![NPM](https://nodei.co/npm/rx-disposable.png)](https://nodei.co/npm/rx-disposable/)
 
