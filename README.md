@@ -43,14 +43,42 @@ CDN
 #### CommonJS
 
 ```js
-const Cancellable = require('rx-cancellable');
+const {
+  Cancellable,
+  CANCELLED,
+  UNCANCELLED,
+  BooleanCancellable,
+  CompositeCancellable,
+  LinkedCancellable
+} = require('rx-cancellable');
 ```
-
-Loading the CommonJS module provides the Cancellable class.
 
 #### Browser
 
-Loading the JavaScript file for the rx-cancellable provides the Cancellable class
+Loading the JavaScript file for the rx-cancellable the classes:
+  - Cancellable
+  - CANCELLED,
+  - UNCANCELLED,
+  - BooleanCancellable,
+  - CompositeCancellable,
+  - LinkedCancellable
+
+## Types
+
+There are 3 types of Cancellables provided:
+
+| Type | Description |
+| --- | --- |
+| BooleanCancellable | Basic implementation of a Cancellable that represents a boolean state. |
+| CompositeCancellable | An implementation of a Cancellable that allows composition of multiple Cancellable instances into a single Cancellable instance. |
+| LinkedCancellable | A Cancellable whose state relies upon another Cancellable. If a LinkedCancellable has no link, it is treated as a BooleanCancellable. |
+
+And provides 2 Singleton instance:
+
+| Type | Description |
+| --- | --- |
+| CANCELLED | A Cancellable instance that is always cancelled. |
+| UNCANCELLED | A Cancellable instance that is always uncancelled. |
 
 ## Documentation
 
@@ -69,3 +97,10 @@ To build the coverages, run the test suite, the docs, and the distributable modu
 ```bash
 npm run build
 ```
+
+## Changelogs
+0.2.0
+- Introduces 3 Cancellable classes instead of a tree-structured Cancellable.
+- Introduces 2 singleton instances of Cancellable
+0.1.0
+- Release
