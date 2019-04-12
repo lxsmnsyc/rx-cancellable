@@ -1,217 +1,41 @@
 'use strict';
 
-/* eslint-disable no-restricted-syntax */
-const dispatch = (s, e) => s.events[e].forEach(f => f.apply(s));
+Object.defineProperty(exports, '__esModule', { value: true });
 
-const CANCELLED = {
-  cancelled: true,
-};
-
-const NOT_CANCELLED = {
-  cancelled: false,
-};
-
-const ACTIVE = {
-  active: true,
-};
-
-const INACTIVE = {
-  active: false,
-};
-
-const DISPOSE_STATE = new WeakMap();
-const ACTIVE_STATE = new WeakMap();
-const PARENT = new WeakMap();
-
-let BASIC_PARENT;
+/* eslint-disable class-methods-use-this */
 
 /**
- * Represents a state of cancellation and activation.
+ * Abstract class for the Cancellable classes
+ * @abstract
  */
 class Cancellable {
   /**
    * @ignore
    */
   constructor() {
-    DISPOSE_STATE.set(this, NOT_CANCELLED);
-    ACTIVE_STATE.set(this, ACTIVE);
     /**
      * @ignore
      */
     this.events = {
-      enable: [],
-      disable: [],
       cancel: [],
     };
-    /**
-     * @ignore
-     */
-    this.children = [];
   }
 
   /**
-   * Creates a Cancellable instance.
-   *
-   * @return {Cancellable}
-   */
-  static create() {
-    if (BASIC_PARENT == null) {
-      BASIC_PARENT = new Cancellable();
-    }
-
-    const cancellable = new Cancellable();
-
-    DISPOSE_STATE.set(cancellable, BASIC_PARENT);
-    ACTIVE_STATE.set(cancellable, BASIC_PARENT);
-    PARENT.set(cancellable, BASIC_PARENT);
-
-    return cancellable;
-  }
-
-
-  /**
-   * Returns true if the Cancellable is cancelled.
-   * @return {boolean}
+   * Returns true if the instance is cancelled.
+   * @abstract
+   * @returns {boolean}
    */
   get cancelled() {
-    return DISPOSE_STATE.get(this).cancelled;
-  }
-
-  /**
-   * Returns true if the Cancellable is active.
-   * @return {boolean}
-   */
-  get active() {
-    return ACTIVE_STATE.get(this).active;
-  }
-
-  /**
-   * Enables a Cancellable.
-   *
-   * Fails to enable if the Cancellable instance is
-   * already cancelled.
-   * @returns {boolean}
-   */
-  enable() {
-    if (!(this.cancelled || this.active)) {
-      ACTIVE_STATE.set(this, PARENT.get(this));
-
-      dispatch(this, 'enable');
-      return true;
-    }
-    return false;
-  }
-
-
-  /**
-   * Disables a Cancellable.
-   *
-   * Fails to disable if the Cancellable instance is
-   * already cancelled.
-   * @returns {boolean}
-   */
-  disable() {
-    if (!this.cancelled && this.active) {
-      ACTIVE_STATE.set(this, INACTIVE);
-
-      dispatch(this, 'disable');
-      return true;
-    }
     return false;
   }
 
   /**
-   * Checks if this Cancellable is a parent of the given Cancellable (hierarchy).
-   * @param {Cancellable} cancellable
-   * The child Cancellable
-   * @returns {boolean}
-   */
-  isParentTo(cancellable) {
-    const parent = PARENT.get(cancellable);
-    return parent != null
-      && (parent === this || (parent !== BASIC_PARENT && this.isParentTo(parent)));
-  }
-
-  /**
-   * Sets the given Cancellable as a parent Cancellable.
-   *
-   * if the given Cancellable is already cancelled, this
-   * Cancellable is cancelled as well.
-   * @param {Cancellable} cancellable
-   * @returns {boolean}
-   */
-  setParent(cancellable) {
-    if (cancellable !== this
-      && !this.isParentTo(cancellable) && cancellable instanceof Cancellable) {
-      if (cancellable.cancelled) {
-        this.cancel();
-      } else {
-        PARENT.set(this, cancellable);
-        cancellable.children.push(this);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Removes the parent Cancellable
-   * @param {!Cancellable} cancellable
-   * The parent Cancellable
-   * @returns {boolean}
-   */
-  removeParent(cancellable) {
-    return cancellable.remove(this);
-  }
-
-  /**
-   * Adds a Cancellable as a child Cancellable.
-   *
-   * Child Disposables are cancelled, enabled and disabled if their
-   * parent Cancellable is cancelled as well.
-   *
-   * A child Cancellable cannot have more than one parent Cancellable.
-   *
-   * If a child Cancellable is added to a parent Cancellable that is
-   * already cancelled, the child Cancellable is cancelled.
-   *
-   * @param {!Cancellable} cancellable
-   * @returns {boolean}
-   */
-  add(cancellable) {
-    return cancellable.setParent(this);
-  }
-
-  /**
-   * Removes a direct child Cancellable.
-   *
-   * @param {!Cancellable} cancellable
-   * The child Cancellable to be removed.
-   * @returns {boolean}
-   */
-  remove(cancellable) {
-    if (!this.cancelled && PARENT.get(cancellable) === this) {
-      this.children = this.children.filter(x => x !== cancellable);
-      PARENT.set(cancellable, BASIC_PARENT);
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Disposes the instance.
-   *
-   * If the Cancellable instance has more than one children, the
-   * child Disposables are cancelled as well.
+   * Cancels the instance.
+   * @abstract
    * @returns {boolean}
    */
   cancel() {
-    if (!this.cancelled) {
-      dispatch(this, 'cancel');
-      this.children.forEach(x => x.cancel());
-      DISPOSE_STATE.set(this, CANCELLED);
-      return true;
-    }
     return false;
   }
 
@@ -222,11 +46,11 @@ class Cancellable {
    * - enable: fires whenever the Cancellable is enabled.
    * - disable: fires whenever the Cancellable is disabled.
    * - cancel: fires when the Cancellable is cancelled.
-   * @param {!function} fn
+   * @param {!function} listener
    * a function to be called when the event is dispatched.
    */
-  addEventListener(ev, fn) {
-    if (typeof fn !== 'function') {
+  addEventListener(ev, listener) {
+    if (typeof listener !== 'function') {
       return;
     }
     const { events } = this;
@@ -234,7 +58,7 @@ class Cancellable {
       return;
     }
     if (ev in events) {
-      events[ev].push(fn);
+      events[ev].push(listener);
     }
   }
 
@@ -246,11 +70,11 @@ class Cancellable {
    * - enable: fires whenever the Cancellable is enabled.
    * - disable: fires whenever the Cancellable is disabled.
    * - cancel: fires when the Cancellable is cancelled.
-   * @param {!function} fn
+   * @param {!function} listener
    * a function from be removed from the target event dispatcher.
    */
-  removeEventListener(ev, fn) {
-    if (typeof fn !== 'function') {
+  removeEventListener(ev, listener) {
+    if (typeof listener !== 'function') {
       return;
     }
     const { events } = this;
@@ -258,7 +82,7 @@ class Cancellable {
       return;
     }
     if (ev in events) {
-      const index = events[ev].indexOf(fn);
+      const index = events[ev].indexOf(listener);
       if (index !== -1) {
         events[ev].splice(index, 1);
       }
@@ -266,4 +90,304 @@ class Cancellable {
   }
 }
 
-module.exports = Cancellable;
+/* eslint-disable class-methods-use-this */
+
+/**
+ * A Cancellable class that is always cancelled and cannot be cancelled.
+ */
+class CancelledCancellable extends Cancellable {
+  /**
+   * Always returns true since this is a CancelledCancellable.
+   */
+  get cancelled() {
+    return true;
+  }
+
+  /**
+   * Cancels the CancelledCancellable (empty)
+   */
+  cancel() {
+    return false;
+  }
+}
+
+const CANCELLED = new CancelledCancellable();
+
+/* eslint-disable class-methods-use-this */
+
+/**
+ * A Cancellable class that is always uncancelled and cannot be cancelled.
+ */
+class UncancelledCancellable extends Cancellable {
+  /**
+   * Always returns true since this is a CancelledCancellable.
+   */
+  get cancelled() {
+    return false;
+  }
+
+  /**
+   * Cancels the CancelledCancellable (empty)
+   */
+  cancel() {
+    return false;
+  }
+}
+
+const UNCANCELLED = new UncancelledCancellable();
+
+/**
+ * @ignore
+ */
+const dispatch = (s, e) => s.events[e].forEach(f => f.apply(s));
+
+/**
+ * @ignore
+ */
+const CANCEL_STATE = new WeakMap();
+
+/**
+ * A simple Cancellable class that represents a boolean state.
+ */
+class BooleanCancellable extends Cancellable {
+  /**
+   * Creates a BooleanCancellable
+   */
+  constructor() {
+    super();
+
+    CANCEL_STATE.set(this, UNCANCELLED);
+  }
+
+  /**
+   * Returns true if the instance is cancelled.
+   * @returns {boolean}
+   */
+  get cancelled() {
+    return CANCEL_STATE.get(this).cancelled;
+  }
+
+  /**
+   * Cancels the instance
+   * @returns {boolean}
+   * Returns true if the cancel was successful.
+   */
+  cancel() {
+    if (!this.cancelled) {
+      CANCEL_STATE.set(this, CANCELLED);
+
+      dispatch(this, 'cancel');
+      return true;
+    }
+    return false;
+  }
+}
+
+/* eslint-disable no-restricted-syntax */
+/**
+ * @ignore
+ */
+const BUFFERS = new WeakMap();
+/**
+ * @ignore
+ */
+const CANCEL_STATE$1 = new WeakMap();
+
+/**
+ * A Cancellable class that allows composition of Cancellable instances.
+ */
+class CompositeCancellable extends Cancellable {
+  /**
+   * Creates a CompositeCancellable
+   */
+  constructor() {
+    super();
+
+    BUFFERS.set(this, []);
+    CANCEL_STATE$1.set(this, UNCANCELLED);
+  }
+
+  /**
+   * Returns true if the instance is cancelled.
+   * @returns {boolean}
+   */
+  get cancelled() {
+    return CANCEL_STATE$1.get(this).cancelled;
+  }
+
+  /**
+   * Cancels the instances contained.
+   * @returns {boolean}
+   * Returns true if the cancel was successful.
+   */
+  cancel() {
+    if (!this.cancelled) {
+      const buffer = BUFFERS.get(this);
+      BUFFERS.set(this, []);
+
+      for (const i of buffer) {
+        i.cancel();
+      }
+
+      CANCEL_STATE$1.set(this, CANCELLED);
+      return true;
+    }
+    return false;
+  }
+
+
+  /**
+   * Adds the given Cancellable into the composite.
+   * @param {Cancellable} cancellable
+   * The cancellable to be added to the composite.
+   * @returns {boolean}
+   */
+  add(cancellable) {
+    if (cancellable instanceof Cancellable && cancellable !== this) {
+      if (this.cancelled) {
+        cancellable.cancel();
+      } else {
+        BUFFERS.get(this).push(cancellable);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Removes the given Cancellable from the composite.
+   * @param {Cancellable} cancellable
+   * The cancellable to be removed from the composite.
+   * @returns {boolean}
+   */
+  remove(cancellable) {
+    if (cancellable instanceof Cancellable && cancellable !== this) {
+      const buffer = BUFFERS.get(this);
+
+      const index = buffer.indexOf(cancellable);
+
+      if (index !== -1) {
+        buffer.splice(index, 1);
+
+        dispatch(this, 'cancel');
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+/**
+ * @ignore
+ */
+const ORIGIN = new WeakMap();
+/**
+ * @ignore
+ */
+const LINK = new WeakMap();
+/**
+ * @ignore
+ */
+const LISTENER = new WeakMap();
+
+/**
+ * A Cancellable class that allows linking on Cancellable instances.
+ *
+ * A LinkedCancellable will be disposed when the linked Cancellable
+ * instance is disposed and vice-versa
+ */
+class LinkedCancellable extends Cancellable {
+  /**
+   * Creates a LinkedCancellable
+   */
+  constructor() {
+    super();
+
+    const bool = new BooleanCancellable();
+    ORIGIN.set(this, bool);
+    LINK.set(this, bool);
+  }
+
+  /**
+   * Returns true if the instance is cancelled.
+   * @returns {boolean}
+   */
+  get cancelled() {
+    return ORIGIN.get(this).cancelled;
+  }
+
+  /**
+   * Cancels the instances contained.
+   * @returns {boolean}
+   * Returns true if the cancel was successful.
+   */
+  cancel() {
+    if (!this.cancelled) {
+      const link = LINK.get(this);
+      const origin = ORIGIN.get(this);
+      if (origin !== link) {
+        this.unlink();
+        link.cancel();
+        LINK.set(this, origin);
+      }
+      origin.cancel();
+      dispatch(this, 'cancel');
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Links to a Cancellable instance.
+   * @param {Cancellable} cancellable
+   * @returns {boolean}
+   * Returns true if the link was successful
+   */
+  link(cancellable) {
+    if (cancellable instanceof Cancellable && cancellable !== this) {
+      if (this.cancelled) {
+        cancellable.cancel();
+      } else if (cancellable.cancelled) {
+        this.cancel();
+      } else {
+        this.unlink();
+
+        LINK.set(this, cancellable);
+
+        const listener = () => this.cancel();
+        cancellable.addEventListener('cancel', listener);
+        LISTENER.set(this, listener);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Unlinks this cancellable
+   * @returns {boolean}
+   * Returns true if the unlink is successful
+   */
+  unlink() {
+    if (!this.cancelled) {
+      const link = LINK.get(this);
+      const origin = ORIGIN.get(this);
+
+      if (origin !== link) {
+        const listener = LISTENER.get(this);
+        link.removeEventListener('cancel', listener);
+        LISTENER.set(this, null);
+        LINK.set(this, origin);
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+exports.BooleanCancellable = BooleanCancellable;
+exports.CANCELLED = CANCELLED;
+exports.Cancellable = Cancellable;
+exports.CompositeCancellable = CompositeCancellable;
+exports.LinkedCancellable = LinkedCancellable;
+exports.UNCANCELLED = UNCANCELLED;
