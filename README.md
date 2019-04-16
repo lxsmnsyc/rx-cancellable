@@ -99,6 +99,8 @@ npm run build
 ```
 
 ## Changelogs
+0.3.0
+- Removed privacy of cancellable states. The decision of replacement is due to performance issues with WeakMaps.
 0.2.0
 - Introduces 3 Cancellable classes instead of a tree-structured Cancellable.
 - Introduces 2 singleton instances of Cancellable
