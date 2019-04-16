@@ -142,11 +142,6 @@ const UNCANCELLED = new UncancelledCancellable();
 const dispatch = (s, e) => s.events[e].forEach(f => f.apply(s));
 
 /**
- * @ignore
- */
-const CANCEL_STATE = new WeakMap();
-
-/**
  * A simple Cancellable class that represents a boolean state.
  */
 class BooleanCancellable extends Cancellable {
@@ -156,7 +151,10 @@ class BooleanCancellable extends Cancellable {
   constructor() {
     super();
 
-    CANCEL_STATE.set(this, UNCANCELLED);
+    /**
+     * @ignore
+     */
+    this.state = UNCANCELLED;
   }
 
   /**
@@ -164,7 +162,7 @@ class BooleanCancellable extends Cancellable {
    * @returns {boolean}
    */
   get cancelled() {
-    return CANCEL_STATE.get(this).cancelled;
+    return this.state.cancelled;
   }
 
   /**
@@ -174,7 +172,7 @@ class BooleanCancellable extends Cancellable {
    */
   cancel() {
     if (!this.cancelled) {
-      CANCEL_STATE.set(this, CANCELLED);
+      this.state = CANCELLED;
 
       dispatch(this, 'cancel');
       return true;
@@ -185,15 +183,6 @@ class BooleanCancellable extends Cancellable {
 
 /* eslint-disable no-restricted-syntax */
 /**
- * @ignore
- */
-const BUFFERS = new WeakMap();
-/**
- * @ignore
- */
-const CANCEL_STATE$1 = new WeakMap();
-
-/**
  * A Cancellable class that allows composition of Cancellable instances.
  */
 class CompositeCancellable extends Cancellable {
@@ -203,8 +192,14 @@ class CompositeCancellable extends Cancellable {
   constructor() {
     super();
 
-    BUFFERS.set(this, []);
-    CANCEL_STATE$1.set(this, UNCANCELLED);
+    /**
+     * @ignore
+     */
+    this.buffer = [];
+    /**
+     * @ignore
+     */
+    this.state = UNCANCELLED;
   }
 
   /**
@@ -212,7 +207,7 @@ class CompositeCancellable extends Cancellable {
    * @returns {boolean}
    */
   get cancelled() {
-    return CANCEL_STATE$1.get(this).cancelled;
+    return this.state.cancelled;
   }
 
   /**
@@ -222,14 +217,14 @@ class CompositeCancellable extends Cancellable {
    */
   cancel() {
     if (!this.cancelled) {
-      const buffer = BUFFERS.get(this);
-      BUFFERS.set(this, []);
+      const { buffer } = this;
+      this.buffer = [];
 
       for (const i of buffer) {
         i.cancel();
       }
 
-      CANCEL_STATE$1.set(this, CANCELLED);
+      this.state = CANCELLED;
       return true;
     }
     return false;
@@ -247,7 +242,7 @@ class CompositeCancellable extends Cancellable {
       if (this.cancelled) {
         cancellable.cancel();
       } else {
-        BUFFERS.get(this).push(cancellable);
+        this.buffer.push(cancellable);
         return true;
       }
     }
@@ -262,7 +257,7 @@ class CompositeCancellable extends Cancellable {
    */
   remove(cancellable) {
     if (cancellable instanceof Cancellable && cancellable !== this) {
-      const buffer = BUFFERS.get(this);
+      const { buffer } = this;
 
       const index = buffer.indexOf(cancellable);
 
@@ -278,19 +273,6 @@ class CompositeCancellable extends Cancellable {
 }
 
 /**
- * @ignore
- */
-const ORIGIN = new WeakMap();
-/**
- * @ignore
- */
-const LINK = new WeakMap();
-/**
- * @ignore
- */
-const LISTENER = new WeakMap();
-
-/**
  * A Cancellable class that allows linking on Cancellable instances.
  *
  * A LinkedCancellable will be disposed when the linked Cancellable
@@ -304,8 +286,14 @@ class LinkedCancellable extends Cancellable {
     super();
 
     const bool = new BooleanCancellable();
-    ORIGIN.set(this, bool);
-    LINK.set(this, bool);
+    /**
+     * @ignore
+     */
+    this.origin = bool;
+    /**
+     * @ignore
+     */
+    this.linked = bool;
   }
 
   /**
@@ -313,7 +301,7 @@ class LinkedCancellable extends Cancellable {
    * @returns {boolean}
    */
   get cancelled() {
-    return ORIGIN.get(this).cancelled;
+    return this.origin.cancelled;
   }
 
   /**
@@ -323,12 +311,12 @@ class LinkedCancellable extends Cancellable {
    */
   cancel() {
     if (!this.cancelled) {
-      const link = LINK.get(this);
-      const origin = ORIGIN.get(this);
-      if (origin !== link) {
+      const { linked } = this;
+      const { origin } = this;
+      if (origin !== linked) {
         this.unlink();
-        link.cancel();
-        LINK.set(this, origin);
+        linked.cancel();
+        this.linked = origin;
       }
       origin.cancel();
       dispatch(this, 'cancel');
@@ -352,11 +340,11 @@ class LinkedCancellable extends Cancellable {
       } else {
         this.unlink();
 
-        LINK.set(this, cancellable);
+        this.linked = cancellable;
 
         const listener = () => this.cancel();
         cancellable.addEventListener('cancel', listener);
-        LISTENER.set(this, listener);
+        this.listener = listener;
         return true;
       }
     }
@@ -370,14 +358,14 @@ class LinkedCancellable extends Cancellable {
    */
   unlink() {
     if (!this.cancelled) {
-      const link = LINK.get(this);
-      const origin = ORIGIN.get(this);
+      const { linked } = this;
+      const { origin } = this;
 
-      if (origin !== link) {
-        const listener = LISTENER.get(this);
-        link.removeEventListener('cancel', listener);
-        LISTENER.set(this, null);
-        LINK.set(this, origin);
+      if (origin !== linked) {
+        const { listener } = this;
+        linked.removeEventListener('cancel', listener);
+        this.listener = null;
+        this.linked = origin;
         return true;
       }
     }
