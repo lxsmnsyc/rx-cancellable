@@ -2,10 +2,6 @@ import Cancellable from './cancellable';
 import UncancelledCancellable from './uncancelled';
 import CancelledCancellable from './cancelled';
 import { dispatch } from './utils';
-/**
- * @ignore
- */
-const CANCEL_STATE = new WeakMap();
 
 /**
  * A simple Cancellable class that represents a boolean state.
@@ -17,7 +13,10 @@ export default class BooleanCancellable extends Cancellable {
   constructor() {
     super();
 
-    CANCEL_STATE.set(this, UncancelledCancellable);
+    /**
+     * @ignore
+     */
+    this.state = UncancelledCancellable;
   }
 
   /**
@@ -25,7 +24,7 @@ export default class BooleanCancellable extends Cancellable {
    * @returns {boolean}
    */
   get cancelled() {
-    return CANCEL_STATE.get(this).cancelled;
+    return this.state.cancelled;
   }
 
   /**
@@ -35,7 +34,7 @@ export default class BooleanCancellable extends Cancellable {
    */
   cancel() {
     if (!this.cancelled) {
-      CANCEL_STATE.set(this, CancelledCancellable);
+      this.state = CancelledCancellable;
 
       dispatch(this, 'cancel');
       return true;
