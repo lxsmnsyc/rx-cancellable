@@ -4,15 +4,6 @@ import UncancelledCancellable from './uncancelled';
 import CancelledCancellable from './cancelled';
 import { dispatch } from './utils';
 /**
- * @ignore
- */
-const BUFFERS = new WeakMap();
-/**
- * @ignore
- */
-const CANCEL_STATE = new WeakMap();
-
-/**
  * A Cancellable class that allows composition of Cancellable instances.
  */
 export default class CompositeCancellable extends Cancellable {
@@ -22,8 +13,14 @@ export default class CompositeCancellable extends Cancellable {
   constructor() {
     super();
 
-    BUFFERS.set(this, []);
-    CANCEL_STATE.set(this, UncancelledCancellable);
+    /**
+     * @ignore
+     */
+    this.buffer = [];
+    /**
+     * @ignore
+     */
+    this.state = UncancelledCancellable;
   }
 
   /**
@@ -31,7 +28,7 @@ export default class CompositeCancellable extends Cancellable {
    * @returns {boolean}
    */
   get cancelled() {
-    return CANCEL_STATE.get(this).cancelled;
+    return this.state.cancelled;
   }
 
   /**
@@ -41,14 +38,14 @@ export default class CompositeCancellable extends Cancellable {
    */
   cancel() {
     if (!this.cancelled) {
-      const buffer = BUFFERS.get(this);
-      BUFFERS.set(this, []);
+      const { buffer } = this;
+      this.buffer = [];
 
       for (const i of buffer) {
         i.cancel();
       }
 
-      CANCEL_STATE.set(this, CancelledCancellable);
+      this.state = CancelledCancellable;
       return true;
     }
     return false;
@@ -66,7 +63,7 @@ export default class CompositeCancellable extends Cancellable {
       if (this.cancelled) {
         cancellable.cancel();
       } else {
-        BUFFERS.get(this).push(cancellable);
+        this.buffer.push(cancellable);
         return true;
       }
     }
@@ -81,7 +78,7 @@ export default class CompositeCancellable extends Cancellable {
    */
   remove(cancellable) {
     if (cancellable instanceof Cancellable && cancellable !== this) {
-      const buffer = BUFFERS.get(this);
+      const { buffer } = this;
 
       const index = buffer.indexOf(cancellable);
 
