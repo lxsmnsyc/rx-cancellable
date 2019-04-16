@@ -2,19 +2,6 @@ import Cancellable from './cancellable';
 import BooleanCancellable from './boolean';
 import { dispatch } from './utils';
 /**
- * @ignore
- */
-const ORIGIN = new WeakMap();
-/**
- * @ignore
- */
-const LINK = new WeakMap();
-/**
- * @ignore
- */
-const LISTENER = new WeakMap();
-
-/**
  * A Cancellable class that allows linking on Cancellable instances.
  *
  * A LinkedCancellable will be disposed when the linked Cancellable
@@ -28,8 +15,14 @@ export default class LinkedCancellable extends Cancellable {
     super();
 
     const bool = new BooleanCancellable();
-    ORIGIN.set(this, bool);
-    LINK.set(this, bool);
+    /**
+     * @ignore
+     */
+    this.origin = bool;
+    /**
+     * @ignore
+     */
+    this.linked = bool;
   }
 
   /**
@@ -37,7 +30,7 @@ export default class LinkedCancellable extends Cancellable {
    * @returns {boolean}
    */
   get cancelled() {
-    return ORIGIN.get(this).cancelled;
+    return this.origin.cancelled;
   }
 
   /**
@@ -47,12 +40,12 @@ export default class LinkedCancellable extends Cancellable {
    */
   cancel() {
     if (!this.cancelled) {
-      const link = LINK.get(this);
-      const origin = ORIGIN.get(this);
-      if (origin !== link) {
+      const { linked } = this;
+      const { origin } = this;
+      if (origin !== linked) {
         this.unlink();
-        link.cancel();
-        LINK.set(this, origin);
+        linked.cancel();
+        this.linked = origin;
       }
       origin.cancel();
       dispatch(this, 'cancel');
@@ -76,11 +69,11 @@ export default class LinkedCancellable extends Cancellable {
       } else {
         this.unlink();
 
-        LINK.set(this, cancellable);
+        this.linked = cancellable;
 
         const listener = () => this.cancel();
         cancellable.addEventListener('cancel', listener);
-        LISTENER.set(this, listener);
+        this.listener = listener;
         return true;
       }
     }
@@ -94,14 +87,14 @@ export default class LinkedCancellable extends Cancellable {
    */
   unlink() {
     if (!this.cancelled) {
-      const link = LINK.get(this);
-      const origin = ORIGIN.get(this);
+      const { linked } = this;
+      const { origin } = this;
 
-      if (origin !== link) {
-        const listener = LISTENER.get(this);
-        link.removeEventListener('cancel', listener);
-        LISTENER.set(this, null);
-        LINK.set(this, origin);
+      if (origin !== linked) {
+        const { listener } = this;
+        linked.removeEventListener('cancel', listener);
+        this.listener = null;
+        this.linked = origin;
         return true;
       }
     }
