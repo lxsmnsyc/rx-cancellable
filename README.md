@@ -99,6 +99,8 @@ npm run build
 ```
 
 ## Changelogs
+0.3.2
+- Fixed CompositeCancellable not dispatching event listeners when cancelled.
 0.3.0
 - Removed privacy of cancellable states. The decision of replacement is due to performance issues with WeakMaps.
 0.2.0
