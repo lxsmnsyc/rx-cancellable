@@ -46,6 +46,7 @@ export default class CompositeCancellable extends Cancellable {
       }
 
       this.state = CancelledCancellable;
+      dispatch(this, 'cancel');
       return true;
     }
     return false;
@@ -84,8 +85,6 @@ export default class CompositeCancellable extends Cancellable {
 
       if (index !== -1) {
         buffer.splice(index, 1);
-
-        dispatch(this, 'cancel');
         return true;
       }
     }
