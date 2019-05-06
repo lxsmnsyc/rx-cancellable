@@ -43,8 +43,6 @@ class Cancellable {
    * Registers a listener function to a target event dispatcher.
    * @param {!string} ev
    * Defines the event target
-   * - enable: fires whenever the Cancellable is enabled.
-   * - disable: fires whenever the Cancellable is disabled.
    * - cancel: fires when the Cancellable is cancelled.
    * @param {!function} listener
    * a function to be called when the event is dispatched.
@@ -67,8 +65,6 @@ class Cancellable {
    * Removes a listener function from a target event dispatcher.
    * @param {!string} ev
    * Defines the event target
-   * - enable: fires whenever the Cancellable is enabled.
-   * - disable: fires whenever the Cancellable is disabled.
    * - cancel: fires when the Cancellable is cancelled.
    * @param {!function} listener
    * a function from be removed from the target event dispatcher.
@@ -225,6 +221,7 @@ class CompositeCancellable extends Cancellable {
       }
 
       this.state = CANCELLED;
+      dispatch(this, 'cancel');
       return true;
     }
     return false;
@@ -263,8 +260,6 @@ class CompositeCancellable extends Cancellable {
 
       if (index !== -1) {
         buffer.splice(index, 1);
-
-        dispatch(this, 'cancel');
         return true;
       }
     }
